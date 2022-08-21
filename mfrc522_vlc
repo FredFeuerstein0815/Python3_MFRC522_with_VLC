@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+from RPi import GPIO
+from time import sleep
+from vlc import MediaPlayer
+from mfrc522 import SimpleMFRC522
+
+GPIO.setwarnings(False)
+reader = SimpleMFRC522()
+
+TITELDICT = {
+    705344242517 : MediaPlayer('/home/pi/Musik/Chip1.mp3'),
+    219776782654 : MediaPlayer('/home/pi/Musik/Chip2.mp3'),
+    566343866225 : MediaPlayer('/home/pi/Musik/Chip12.mp3')
+    }
+
+def set_sound(set_key):
+    mediatest = 0
+    for get_key, media in TITELDICT.items():
+        if media.is_playing():
+            print("Player läuft bereits, ich stoppe ihn jetzt.")
+            mediatest = 1
+            media.stop() # Stoppt den Player beim dranhalten eines neuen Chips, wenn erwünscht
+            sleep(1)
+    for get_key, media in TITELDICT.items():
+        if get_key == set_key and mediatest == 0:
+            media.stop()
+            media.play()
+            sleep(1)
+
+def main():
+    while True:
+        id_rfid, text = reader.read()
+        print("ID:{}".format(id_rfid))
+        set_sound(id_rfid)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Abbruch durch Benutzer.")
+    finally:
+        GPIO.cleanup()
